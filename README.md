@@ -14,7 +14,6 @@ The game sends a keepalive report every ~3 seconds while the beacon is active, a
 |------|---------|
 | Microcontroller | ESP32-S3 Super Mini |
 | LED ring | 12x WS2812B NeoPixel, GPIO4 |
-| Colour | Amber `#FF3700` |
 
 Any ESP32-S3 board with TinyUSB support should work. WS2812B ring size is configurable via `LED_COUNT`.
 
