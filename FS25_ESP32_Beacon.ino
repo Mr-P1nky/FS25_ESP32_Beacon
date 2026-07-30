@@ -9,7 +9,7 @@
  * The NeoPixel ring mirrors the in-game beacon:
  *   Mode 0x00  OFF
  *   Mode 0x01  ROUND (amber chasing sweep)
- *   Mode 0x07  BLINK (amber flash)
+ *   Mode 0x07  BLINK (amber flash: short-short-long, repeating)
  *
  * Hardware:
  *   Board:     ESP32-S3 Super Mini
@@ -88,10 +88,18 @@ public:
     // No LED calls here — USB callbacks must not block
     // Real payload: [0xFF, mode, ...] — byte[0]=0xFF always, byte[1]=mode
     uint8_t mode = (len >= 2) ? buffer[1] : buffer[0];
-    if      (mode == 0x00) beaconState = STATE_OFF;
-    else if (mode == 0x01) beaconState = STATE_ROUND;
-    else if (mode == 0x07) beaconState = STATE_BLINK;
+    BeaconState newState = beaconState;
+    if      (mode == 0x00) newState = STATE_OFF;
+    else if (mode == 0x01) newState = STATE_ROUND;
+    else if (mode == 0x07) newState = STATE_BLINK;
+
+    if (newState == STATE_BLINK && beaconState != STATE_BLINK) {
+      blinkResetRequested = true;
+    }
+    beaconState = newState;
   }
+
+  volatile bool blinkResetRequested = false;
 
   enum BeaconState { STATE_OFF, STATE_ROUND, STATE_BLINK };
   volatile BeaconState beaconState = STATE_OFF;
@@ -104,12 +112,18 @@ GiantsBeaconHID beaconHID;
 // ── Animation state ───────────────────────────────────────────────────────────
 uint8_t  chasePos    = 0;
 uint32_t lastStep    = 0;
-bool     blinkOn     = false;
-uint32_t lastBlink   = 0;
 
 #define CHASE_INTERVAL_MS   60    // speed of rotating sweep
 #define CHASE_TAIL          4     // number of lit pixels in the sweep
-#define BLINK_INTERVAL_MS   400   // on/off period for blink mode
+
+// Blink sequence measured from real FS25 footage (60fps frame analysis):
+// two quick flashes then a long pause, 883ms total cycle.
+const uint32_t blinkSequence[]   = { 67, 67, 67, 682 };
+const bool     blinkSequenceOn[] = { true, false, true, false };
+#define BLINK_SEQUENCE_LEN  (sizeof(blinkSequence) / sizeof(blinkSequence[0]))
+
+uint8_t  blinkStep     = 0;
+uint32_t blinkStepStart = 0;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -143,16 +157,25 @@ void animateRound() {
 
 void animateBlink() {
   uint32_t now = millis();
-  if (now - lastBlink < BLINK_INTERVAL_MS) return;
-  lastBlink = now;
-
-  blinkOn = !blinkOn;
-  if (blinkOn) {
+  if (beaconHID.blinkResetRequested) {
+    beaconHID.blinkResetRequested = false;
+    blinkStep = 0;
+    blinkStepStart = now;
     for (int i = 0; i < LED_COUNT; i++) ring.setPixelColor(i, BEACON_AMBER);
-  } else {
-    ring.clear();
+    ring.show();
+    return;
   }
-  ring.show();
+  if (now - blinkStepStart >= blinkSequence[blinkStep]) {
+    blinkStep = (blinkStep + 1) % BLINK_SEQUENCE_LEN;
+    blinkStepStart = now;
+
+    if (blinkSequenceOn[blinkStep]) {
+      for (int i = 0; i < LED_COUNT; i++) ring.setPixelColor(i, BEACON_AMBER);
+    } else {
+      ring.clear();
+    }
+    ring.show();
+  }
 }
 
 void allOff() {
