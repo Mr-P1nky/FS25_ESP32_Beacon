@@ -3,23 +3,24 @@
  * Farming Simulator 25 - USB Beacon Light Emulator
  *
  * Emulates the Giants Software USB Beacon (VID: 0x340D, PID: 0x1710)
- * using an ESP32-S3 Super Mini + 12x WS2812B NeoPixel ring.
+ * using a Waveshare ESP32-S3-Zero + 12x WS2812B NeoPixel ring.
  *
  * FS25 automatically sends HID output reports to control the beacon state.
  * The NeoPixel ring mirrors the in-game beacon:
  *   Mode 0x00  OFF
  *   Mode 0x01  ROUND (amber chasing sweep)
- *   Mode 0x07  BLINK (amber flash: short-short-long, repeating)
+ *   Mode 0x07  BLINK (amber flash: two quick flashes then a long pause, repeating)
  *
  * Hardware:
- *   Board:     ESP32-S3 Super Mini
+ *   Board:     Waveshare ESP32-S3-Zero
  *   NeoPixels: 12x WS2812B ring on GPIO4
- *   Colour:    Amber #FF3700
  *
  * Arduino IDE settings:
  *   Board:           ESP32S3 Dev Module
  *   USB Mode:        USB-OTG (TinyUSB)
- *   USB CDC On Boot: Disabled
+ *   USB CDC On Boot: Enabled or Disabled both work - CDC is a separate
+ *                    USB interface and doesn't affect the HID descriptor
+ *                    FS25 checks against.
  *
  * To flash: hold BOOT while plugging in USB, then upload normally.
  *
@@ -34,10 +35,10 @@ extern USBHID HID;
 // ── Hardware ──────────────────────────────────────────────────────────────────
 #define LED_PIN     4
 #define LED_COUNT   12
-#define BRIGHTNESS  80   // 0-255, keep reasonable for USB power
+#define BRIGHTNESS  255  // 0-255, tuned for visibility through the housing
 
 // ── Beacon colours ────────────────────────────────────────────────────────────
-#define BEACON_AMBER  0xFF3700   // amber/orange like a real beacon
+#define BEACON_AMBER  0xFF3700   // amber/orange, tuned through housing (R255 G55 B0)
 #define BEACON_OFF    0x000000
 
 // ── NeoPixel ─────────────────────────────────────────────────────────────────

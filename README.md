@@ -10,10 +10,16 @@ The game sends a keepalive report every ~3 seconds while the beacon is active, a
 
 ## Hardware
 
-| Part | Details |
-|------|---------|
-| Microcontroller | ESP32-S3 Super Mini |
-| LED ring | 12x WS2812B NeoPixel, GPIO4 |
+> **Affiliate disclosure:** as an Amazon Associate I earn from qualifying purchases.
+
+| Title | Description | Qty | Affiliate Link |
+|-------|-------------|-----|----------------|
+| Waveshare ESP32-S3-Zero | ESP32-S3FH4R2 MCU — 4MB flash, 2MB PSRAM, WiFi + BLE 5 | 1 | https://amzn.to/4wRNUeB Waveshare 2pc <br> https://amzn.to/4wIOBa7 Clone 1pc <br> https://amzn.to/45HKDnj Clone 3pc |
+| NeoPixel ring | 12x WS2812B addressable LED ring | 1 | https://amzn.to/4A7DNFr |
+| M2x6 SHCS | Socket head cap screw | 4 | TBD |
+| M3x12 SHCS | Socket head cap screw | 2 | TBD |
+| M2x5 countersunk screw | Countersunk machine screw | 2 | TBD |
+| 3D printed enclosure | Custom design, see [`CAD/`](CAD/) | 1 | — |
 
 Any ESP32-S3 board with TinyUSB support should work. WS2812B ring size is configurable via `LED_COUNT`.
 
@@ -31,7 +37,8 @@ Any ESP32-S3 board with TinyUSB support should work. WS2812B ring size is config
 2. Install **Adafruit NeoPixel** via Library Manager
 3. Select board: `ESP32S3 Dev Module`
 4. Set **USB Mode** to `USB-OTG (TinyUSB)`
-5. Set **USB CDC On Boot** to `Disabled`
+
+The Arduino IDE requires a sketch's parent folder to have the exact same name as its `.ino` file. Copy or symlink `Sketch\FS25_ESP32_Beacon.ino` into a folder named `FS25_ESP32_Beacon` before opening it in the IDE.
 
 To flash: hold the BOOT button while plugging in USB, then upload normally.
 
